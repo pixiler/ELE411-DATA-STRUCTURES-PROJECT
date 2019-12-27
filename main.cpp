@@ -6,7 +6,8 @@ using namespace std;
 class AdjListNode{
     public:
         int dest;
-        int weight;
+        int time;
+        int price;
         AdjListNode* next;
 };
 
@@ -41,10 +42,11 @@ class MinHeap{
 };
 
 // A utility function to create a new adjacency list node 
-AdjListNode* newAdjListNode(int dest, int weight){ 
+AdjListNode* newAdjListNode(int dest, int price, int time){ 
     AdjListNode* newNode = (AdjListNode*) malloc(sizeof(AdjListNode)); 
     newNode->dest = dest; 
-    newNode->weight = weight; 
+    newNode->price = price;
+    newNode->time = time; 
     newNode->next = NULL; 
     return newNode; 
 }
@@ -65,16 +67,16 @@ Graph* createGraph(int V){
 }
 
 // Adds an edge to an undirected graph 
-void addEdge( Graph* graph, int src, int dest, int weight){ 
+void addEdge( Graph* graph, int src, int dest, int time, int price){ 
     // Add an edge from src to dest.  
     // A new node is added to the adjacency list of src.
     //  The node is added at the beginning .
-    AdjListNode* newNode = newAdjListNode(dest, weight); 
+    AdjListNode* newNode = newAdjListNode(dest, price, time); 
     newNode->next = graph->array[src].head; 
     graph->array[src].head = newNode; 
   
     // Since graph is undirected, add an edge from dest to src also 
-    newNode = newAdjListNode(src, weight); 
+    newNode = newAdjListNode(src, price, time); 
     newNode->next = graph->array[dest].head; 
     graph->array[dest].head = newNode; 
 } 
@@ -207,9 +209,9 @@ void printArr(int dist[], int n){
 
 // The main function that calulates distances of shortest paths from src to all vertices.
 // It is a O(ELogV) function 
-void dijkstra(Graph* graph, int src) { 
+void dijkstra(Graph* graph, int src, string offerType) { 
     int V = graph->V;// Get the number of vertices in graph 
-    int dist[V];      // dist values used to pick minimum weight edge in cut 
+    int dist[V];      // dist values used to pick minimum price edge in cut 
   
     // minHeap represents set E 
     MinHeap* minHeap = createMinHeap(V); 
@@ -224,8 +226,7 @@ void dijkstra(Graph* graph, int src) {
     // Make dist value of src vertex as 0 so that it is extracted first 
     minHeap->array[src] = newMinHeapNode(src, dist[src]); 
     minHeap->pos[src]   = src; 
-    dist[src] = 0; 
-    decreaseKey(minHeap, src, dist[src]); 
+    dist[src] = 0;     decreaseKey(minHeap, src, dist[src]); 
   
     // Initially size of min heap is equal to V 
     minHeap->size = V; 
@@ -245,8 +246,14 @@ void dijkstra(Graph* graph, int src) {
   
             // If shortest distance to v is not finalized yet, and distance to v 
             // through u is less than its previously calculated distance 
-            if (isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->weight + dist[u] < dist[v]){ 
-                dist[v] = dist[u] + pCrawl->weight; 
+            if (offerType == "price" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->price + dist[u] < dist[v]){ 
+                dist[v] = dist[u] + pCrawl->price; 
+  
+                // update distance value in min heap also 
+                decreaseKey(minHeap, v, dist[v]); 
+            } 
+            if (offerType == "time" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->time + dist[u] < dist[v]){ 
+                dist[v] = dist[u] + pCrawl->time; 
   
                 // update distance value in min heap also 
                 decreaseKey(minHeap, v, dist[v]); 
@@ -262,21 +269,22 @@ int main(){
     // create the graph given in above fugure 
     int V = 9; 
     Graph* graph = createGraph(V); 
-    addEdge(graph, 0, 1, 4); 
-    addEdge(graph, 0, 7, 8); 
-    addEdge(graph, 1, 2, 8); 
-    addEdge(graph, 1, 7, 11); 
-    addEdge(graph, 2, 3, 7); 
-    addEdge(graph, 2, 8, 2); 
-    addEdge(graph, 2, 5, 4); 
-    addEdge(graph, 3, 4, 9); 
-    addEdge(graph, 3, 5, 14); 
-    addEdge(graph, 4, 5, 10); 
-    addEdge(graph, 5, 6, 2); 
-    addEdge(graph, 6, 7, 1); 
-    addEdge(graph, 6, 8, 6); 
-    addEdge(graph, 7, 8, 7); 
-  
-    dijkstra(graph, 0); 
+    addEdge(graph, 0, 1, 4, 300); 
+    addEdge(graph, 0, 7, 8, 50); 
+    addEdge(graph, 1, 2, 8, 30); 
+    addEdge(graph, 1, 7, 11, 100); 
+    addEdge(graph, 2, 3, 7, 200); 
+    addEdge(graph, 2, 8, 2, 50); 
+    addEdge(graph, 2, 5, 4, 300); 
+    addEdge(graph, 3, 4, 9, 120); 
+    addEdge(graph, 3, 5, 14, 30); 
+    addEdge(graph, 4, 5, 10, 140); 
+    addEdge(graph, 5, 6, 2, 700); 
+    addEdge(graph, 6, 7, 1, 1400); 
+    addEdge(graph, 6, 8, 6, 600); 
+    addEdge(graph, 7, 8, 7, 70); 
+    
+    dijkstra(graph, 0, "price"); 
+    dijkstra(graph, 0, "time"); 
     return 0;
 }
