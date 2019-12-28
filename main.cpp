@@ -199,25 +199,48 @@ bool isInMinHeap( MinHeap *minHeap, int v){
    return false; 
 } 
 
-// A utility function used to print the solution 
-void printArr(int dist[], int n){ 
-    cout << "Vertex   Distance from Source" << endl;
-    for (int i = 0; i < n; ++i){
-        cout << i << "\t\t" << dist[i] << endl;
+// // A utility function used to print the solution 
+// void printArr(int dist[], int n){ 
+//     cout << "Vertex   Distance from Source" << endl;
+//     for (int i = 0; i < n; ++i){
+//         cout << i << "\t\t" << dist[i] << endl;
+//     }
+// }
+
+// Function to print shortest path from source to j
+// using parent array
+void printPath(int parent[], int j){
+    // Base Case : If j is source
+    if (parent[j]==-1){
+        return;
     }
+    printPath(parent, parent[j]);
+    cout << " -> " << j;
 }
 
+// A utility function to print the constructed distance
+// array
+int printSolution(int dist[], int n, int parent[]){
+    int src = 0;
+    printf("Vertex\t\tDistance\tPath");
+    for (int i = 1; i < 9; i++)    {
+        cout << endl << src << " -> " << i << " \t\t" << dist[i] << "\t\t" << src;
+        printPath(parent, i);
+    }
+    cout << endl;
+}
 // The main function that calulates distances of shortest paths from src to all vertices.
 // It is a O(ELogV) function 
-void dijkstra(Graph* graph, int src, string offerType) { 
+void dijkstra(Graph* graph, int src, int destination, string offerType) { 
     int V = graph->V;// Get the number of vertices in graph 
     int dist[V];      // dist values used to pick minimum price edge in cut 
-  
+    int parent[V]; 
     // minHeap represents set E 
     MinHeap* minHeap = createMinHeap(V); 
   
     // Initialize min heap with all vertices. dist value of all vertices  
     for (int v = 0; v < V; ++v){ 
+        parent[v] = -1; 
         dist[v] = INT_MAX; 
         minHeap->array[v] = newMinHeapNode(v, dist[v]); 
         minHeap->pos[v] = v; 
@@ -243,27 +266,24 @@ void dijkstra(Graph* graph, int src, string offerType) {
         AdjListNode* pCrawl = graph->array[u].head; 
         while (pCrawl != NULL){ 
             int v = pCrawl->dest; 
-  
             // If shortest distance to v is not finalized yet, and distance to v 
             // through u is less than its previously calculated distance 
             if (offerType == "price" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->price + dist[u] < dist[v]){ 
                 dist[v] = dist[u] + pCrawl->price; 
-  
-                // update distance value in min heap also 
-                decreaseKey(minHeap, v, dist[v]); 
+                parent[v] = u;                    // update the parent array
+                decreaseKey(minHeap, v, dist[v]); // update distance value in min heap also 
             } 
             if (offerType == "time" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->time + dist[u] < dist[v]){ 
                 dist[v] = dist[u] + pCrawl->time; 
-  
-                // update distance value in min heap also 
-                decreaseKey(minHeap, v, dist[v]); 
+                parent[v] = u;                    // update the parent array
+                decreaseKey(minHeap, v, dist[v]); // update distance value in min heap also 
             } 
             pCrawl = pCrawl->next; 
         } 
     } 
   
-    // print the calculated shortest distances 
-    printArr(dist, V); 
+    // print the constructed distance array
+    printSolution(dist, V, parent);
 } 
 int main(){
     // create the graph given in above fugure 
@@ -284,7 +304,9 @@ int main(){
     addEdge(graph, 6, 8, 6, 600); 
     addEdge(graph, 7, 8, 7, 70); 
     
-    dijkstra(graph, 0, "price"); 
-    dijkstra(graph, 0, "time"); 
+    cout << "Optimum Routes From Source to Any Destination For PRICE" << endl;
+    dijkstra(graph, 0, 8, "price"); 
+    cout << "\nOptimum Routes From Source to Any Destination For TIME" << endl;
+    dijkstra(graph, 0, 8, "time"); 
     return 0;
 }
