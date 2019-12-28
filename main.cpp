@@ -220,13 +220,14 @@ void printPath(int parent[], int j){
 
 // A utility function to print the constructed distance
 // array
-int printSolution(int dist[], int n, int parent[]){
-    int src = 0;
-    printf("Vertex\t\tDistance\tPath");
-    for (int i = 1; i < 9; i++)    {
-        cout << endl << src << " -> " << i << " \t\t" << dist[i] << "\t\t" << src;
-        printPath(parent, i);
-    }
+int printSolution(int src, int destination, int dist[], int n, int parent[], string offerType){
+    
+    cout << "Arrival Point\tDeparture Point\t\t";
+    cout << "Flight " << offerType <<"\tPath"<<endl;
+    cout << src << "\t\t" << destination << "\t\t\t";
+    cout << dist[destination] << "\t\t" << src;
+
+    printPath(parent, destination);
     cout << endl;
 }
 // The main function that calulates distances of shortest paths from src to all vertices.
@@ -268,12 +269,12 @@ void dijkstra(Graph* graph, int src, int destination, string offerType) {
             int v = pCrawl->dest; 
             // If shortest distance to v is not finalized yet, and distance to v 
             // through u is less than its previously calculated distance 
-            if (offerType == "price" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->price + dist[u] < dist[v]){ 
+            if (offerType == "Price" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->price + dist[u] < dist[v]){ 
                 dist[v] = dist[u] + pCrawl->price; 
                 parent[v] = u;                    // update the parent array
                 decreaseKey(minHeap, v, dist[v]); // update distance value in min heap also 
             } 
-            if (offerType == "time" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->time + dist[u] < dist[v]){ 
+            if (offerType == "Time" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->time + dist[u] < dist[v]){ 
                 dist[v] = dist[u] + pCrawl->time; 
                 parent[v] = u;                    // update the parent array
                 decreaseKey(minHeap, v, dist[v]); // update distance value in min heap also 
@@ -283,7 +284,7 @@ void dijkstra(Graph* graph, int src, int destination, string offerType) {
     } 
   
     // print the constructed distance array
-    printSolution(dist, V, parent);
+    printSolution(src, destination, dist, V, parent, offerType);
 } 
 int main(){
     // create the graph given in above fugure 
@@ -304,9 +305,9 @@ int main(){
     addEdge(graph, 6, 8, 6, 600); 
     addEdge(graph, 7, 8, 7, 70); 
     
-    cout << "Optimum Routes From Source to Any Destination For PRICE" << endl;
-    dijkstra(graph, 0, 8, "price"); 
-    cout << "\nOptimum Routes From Source to Any Destination For TIME" << endl;
-    dijkstra(graph, 0, 8, "time"); 
+    cout << "\n\t\tOptimum Routes For PRICE" << endl;
+    dijkstra(graph, 0, 8, "Price"); 
+    cout << "\n\t\tOptimum Routes For TIME" << endl;
+    dijkstra(graph, 0, 8, "Time"); 
     return 0;
 }
