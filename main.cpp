@@ -35,9 +35,9 @@ class MinHeapNode{
 // A class to represent a min heap 
 class MinHeap{ 
     public:
-        int size;      // Number of heap nodes present currently 
-        int capacity;  // Capacity of min heap 
-        int *pos;     // This is needed for decreaseKey() 
+        int size;       // Number of heap nodes present currently 
+        int capacity;   // Capacity of min heap 
+        int *pos;       // This is needed for decreaseKey() 
         MinHeapNode **array; 
 };
 
@@ -171,27 +171,21 @@ MinHeapNode* extractMin( MinHeap* minHeap){
 // Function to decreasy dist value of a given vertex v. This function 
 // uses pos[] of min heap to get the current index of node in min heap 
 void decreaseKey(MinHeap* minHeap, int v, int dist){ 
-    // Get the index of v in  heap array 
-    int i = minHeap->pos[v]; 
-  
-    // Get the node and update its dist value 
-    minHeap->array[i]->dist = dist; 
+     
+    int i = minHeap->pos[v];        // Get the index of v in  heap array
+    minHeap->array[i]->dist = dist; // Get the node and update its dist value 
   
     // Travel up while the complete tree is not hepified. 
-    // This is a O(Logn) loop 
     while (i && minHeap->array[i]->dist < minHeap->array[(i - 1) / 2]->dist){ 
         // Swap this node with its parent 
         minHeap->pos[minHeap->array[i]->v] = (i-1)/2; 
         minHeap->pos[minHeap->array[(i-1)/2]->v] = i; 
         swapMinHeapNode(&minHeap->array[i],  &minHeap->array[(i - 1) / 2]); 
-  
-        // move to parent index 
-        i = (i - 1) / 2; 
+        i = (i - 1) / 2; // move to parent index 
     } 
 } 
 
-// A utility function to check if a given vertex 
-// 'v' is in min heap or not 
+// A utility function to check if a given vertex, 'v' is in min heap or not 
 bool isInMinHeap( MinHeap *minHeap, int v){ 
    if (minHeap->pos[v] < minHeap->size){
        return true; 
@@ -199,49 +193,52 @@ bool isInMinHeap( MinHeap *minHeap, int v){
    return false; 
 } 
 
-// // A utility function used to print the solution 
-// void printArr(int dist[], int n){ 
-//     cout << "Vertex   Distance from Source" << endl;
-//     for (int i = 0; i < n; ++i){
-//         cout << i << "\t\t" << dist[i] << endl;
-//     }
-// }
-
-// Function to print shortest path from source to j
-// using parent array
-void printPath(int parent[], int j){
+// Function to print shortest path from source to j using parent array
+void printPath(string* city_arr, int parent[], int j){
     // Base Case : If j is source
     if (parent[j]==-1){
         return;
     }
-    printPath(parent, parent[j]);
-    cout << " -> " << j;
+    printPath(city_arr, parent, parent[j]);
+    cout << " -> " << city_arr[j];
 }
 
-// A utility function to print the constructed distance
-// array
-int printSolution(int src, int destination, int dist[], int n, int parent[], string offerType){
-    
-    cout << "Arrival Point\tDeparture Point\t\t";
-    cout << "Flight " << offerType <<"\tPath"<<endl;
-    cout << src << "\t\t" << destination << "\t\t\t";
-    cout << dist[destination] << "\t\t" << src;
+// A utility function to print the constructed distance array
+int printSolution(string* city_arr, int src, int destination, int dist[], int n, int parent[], int cost[], char offerType){
+    cout << "Departure City\t";
+    cout <<"Arrival City\t";
+    cout <<"Duration\t";
+    cout <<"Price\t\t";
+    cout <<"Path"<<endl;
+   
+    cout << city_arr[src] << "\t\t";
+    cout << city_arr[destination] << "\t\t";
+    if(offerType == 'P'){  
+        cout << cost[destination] << "\t\t";
+        cout << dist[destination] << "\t\t"; 
+    }
+    if(offerType == 'T'){  
+        cout << dist[destination] << "\t\t";
+        cout << cost[destination] << "\t\t"; 
+    }
+    cout << city_arr[src];
 
-    printPath(parent, destination);
+    printPath(city_arr, parent, destination);
     cout << endl;
 }
 // The main function that calulates distances of shortest paths from src to all vertices.
 // It is a O(ELogV) function 
-void dijkstra(Graph* graph, int src, int destination, string offerType) { 
-    int V = graph->V;// Get the number of vertices in graph 
-    int dist[V];      // dist values used to pick minimum price edge in cut 
+void dijkstra(Graph* graph, string* city_arr, int src, int destination, char offerType) { 
+    int V = graph->V;   // Get the number of vertices in graph 
+    int dist[V];        // dist values used to pick minimum price edge in cut 
+    int cost[V]; 
     int parent[V]; 
-    // minHeap represents set E 
-    MinHeap* minHeap = createMinHeap(V); 
+    MinHeap* minHeap = createMinHeap(V);    // minHeap represents set E 
   
     // Initialize min heap with all vertices. dist value of all vertices  
     for (int v = 0; v < V; ++v){ 
         parent[v] = -1; 
+        cost[v] = 0;
         dist[v] = INT_MAX; 
         minHeap->array[v] = newMinHeapNode(v, dist[v]); 
         minHeap->pos[v] = v; 
@@ -250,64 +247,101 @@ void dijkstra(Graph* graph, int src, int destination, string offerType) {
     // Make dist value of src vertex as 0 so that it is extracted first 
     minHeap->array[src] = newMinHeapNode(src, dist[src]); 
     minHeap->pos[src]   = src; 
-    dist[src] = 0;     decreaseKey(minHeap, src, dist[src]); 
+    dist[src] = 0;     
+    decreaseKey(minHeap, src, dist[src]); 
+    cost[src] = dist[src];
   
-    // Initially size of min heap is equal to V 
-    minHeap->size = V; 
+    minHeap->size = V;  // Initially size of min heap is equal to V 
   
-    // In the followin loop, min heap contains all nodes 
-    // whose shortest distance is not yet finalized. 
+    // In the followin loop, min heap contains all nodes whose shortest distance is not yet finalized. 
     while (!isEmpty(minHeap)){ 
-        // Extract the vertex with minimum distance value 
-        MinHeapNode* minHeapNode = extractMin(minHeap); 
-        int u = minHeapNode->v; // Store the extracted vertex number 
+        MinHeapNode* minHeapNode = extractMin(minHeap);     // Extract the vertex with minimum distance value 
+        int u = minHeapNode->v;                             // Store the extracted vertex number 
   
-        // Traverse through all adjacent vertices of u (the extracted 
-        // vertex) and update their distance values 
-        AdjListNode* pCrawl = graph->array[u].head; 
+        
+        AdjListNode* pCrawl = graph->array[u].head;         // Traverse through all adjacent vertices of u (the extracted vertex) and update their distance values 
         while (pCrawl != NULL){ 
             int v = pCrawl->dest; 
-            // If shortest distance to v is not finalized yet, and distance to v 
-            // through u is less than its previously calculated distance 
-            if (offerType == "Price" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->price + dist[u] < dist[v]){ 
+            // If shortest distance to v is not finalized yet, and distance to v through u is less than its previously calculated distance 
+            if (offerType == 'P' && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->price + dist[u] < dist[v]){ 
                 dist[v] = dist[u] + pCrawl->price; 
+                cost[v] = cost[u] + pCrawl->time;
                 parent[v] = u;                    // update the parent array
                 decreaseKey(minHeap, v, dist[v]); // update distance value in min heap also 
             } 
-            if (offerType == "Time" && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->time + dist[u] < dist[v]){ 
+            if (offerType == 'T' && isInMinHeap(minHeap, v) && dist[u] != INT_MAX && pCrawl->time + dist[u] < dist[v]){ 
                 dist[v] = dist[u] + pCrawl->time; 
+                cost[v] = cost[u] + pCrawl->price; 
                 parent[v] = u;                    // update the parent array
                 decreaseKey(minHeap, v, dist[v]); // update distance value in min heap also 
             } 
             pCrawl = pCrawl->next; 
         } 
     } 
-  
-    // print the constructed distance array
-    printSolution(src, destination, dist, V, parent, offerType);
-} 
-int main(){
-    // create the graph given in above fugure 
-    int V = 9; 
-    Graph* graph = createGraph(V); 
-    addEdge(graph, 0, 1, 4, 300); 
-    addEdge(graph, 0, 7, 8, 50); 
-    addEdge(graph, 1, 2, 8, 30); 
-    addEdge(graph, 1, 7, 11, 100); 
-    addEdge(graph, 2, 3, 7, 200); 
-    addEdge(graph, 2, 8, 2, 50); 
-    addEdge(graph, 2, 5, 4, 300); 
-    addEdge(graph, 3, 4, 9, 120); 
-    addEdge(graph, 3, 5, 14, 30); 
-    addEdge(graph, 4, 5, 10, 140); 
-    addEdge(graph, 5, 6, 2, 700); 
-    addEdge(graph, 6, 7, 1, 1400); 
-    addEdge(graph, 6, 8, 6, 600); 
-    addEdge(graph, 7, 8, 7, 70); 
     
-    cout << "\n\t\tOptimum Routes For PRICE" << endl;
-    dijkstra(graph, 0, 8, "Price"); 
-    cout << "\n\t\tOptimum Routes For TIME" << endl;
-    dijkstra(graph, 0, 8, "Time"); 
+    printSolution(city_arr, src, destination, dist, V, parent, cost , offerType);   // print the optimum route and some informations
+} 
+
+bool citiesValid(string source, string destination, string* city_arr, int v){
+    bool src_valid  = false;
+    bool dest_valid = false;
+
+    for (int i = 0; i < v; i++){
+        if(source == city_arr[i])
+            src_valid = true;
+        if(destination == city_arr[i])
+            dest_valid = true;
+        if(src_valid && dest_valid) break;
+    }
+
+    return (src_valid && dest_valid);
+}
+
+int getIndexOfCity(string city, string* city_arr, int v){
+    for(int i = 0; i< v; i++){
+        if(city == city_arr[i])
+            return i;
+    }
+}
+int main(){
+    int V = 9;      // number of cities
+    string cityList [] ={"Bodrum", "Ankara", "Istanbul", "Amsterdam", "Barcelona", "Paris", "London", "Roma", "Helsinki"};
+    
+    int source, destination;
+    string departure, arrival;
+
+    cout << "Please Enter the Departure City\t: " ;     cin >> departure;
+    cout << "Please Enter the Arrival City\t: " ;       cin >> arrival;
+    
+
+    if(!citiesValid(departure, arrival, cityList, V)){   // City control if arrival and departure is in city array or not
+        cout << "NO FLIGHTS!!! " << endl;
+    }
+    else{
+        destination = getIndexOfCity(arrival, cityList, V);
+        source      = getIndexOfCity(departure, cityList, V);
+
+        Graph* graph = createGraph(V); 
+        addEdge(graph, 0, 1, 4, 300);   // graph , source, destination, duration, price
+        addEdge(graph, 0, 7, 8, 50); 
+        addEdge(graph, 1, 2, 8, 30); 
+        addEdge(graph, 1, 7, 11, 100); 
+        addEdge(graph, 2, 3, 7, 200); 
+        addEdge(graph, 2, 8, 2, 50); 
+        addEdge(graph, 2, 5, 4, 300); 
+        addEdge(graph, 3, 4, 9, 120); 
+        addEdge(graph, 3, 5, 14, 30); 
+        addEdge(graph, 4, 5, 10, 140); 
+        addEdge(graph, 5, 6, 2, 700); 
+        addEdge(graph, 6, 7, 1, 1400); 
+        addEdge(graph, 6, 8, 6, 600); 
+        addEdge(graph, 7, 8, 7, 70); 
+        cout<<endl;
+        // cout << "\n\t\tOptimum Route For PRICE" << endl;
+        dijkstra(graph, cityList, source, destination, 'P'); 
+        // cout << "\n\t\tOptimum Route For TIME" << endl;
+        cout<<endl;
+        dijkstra(graph, cityList, source, destination, 'T'); 
+    }
     return 0;
 }
